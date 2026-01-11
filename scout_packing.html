@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scout Troop Packing Manager</title>
+    <style>
+        :root {
+            --bg-primary: #e0f2fe;
+            --bg-secondary: #ddd6fe;
+            --bg-card: white;
+            --bg-card-secondary: #f9fafb;
+            --bg-input: white;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-header: #1e3a8a;
+            --border-color: #e5e7eb;
+            --border-light: #d1d5db;
+            --shadow: rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1e293b;
+            --bg-secondary: #0f172a;
+            --bg-card: #334155;
+            --bg-card-secondary: #475569;
+            --bg-input: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-header: #93c5fd;
+            --border-color: #475569;
+            --border-light: #64748b;
+            --shadow: rgba(0,0,0,0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px var(--shadow);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left h1 {
+            color: var(--text-header);
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .header-left p {
+            color: var(--text-secondary);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .save-indicator {
+            display: inline-block;
+            padding: 8px 12px;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .theme-toggle {
+            background: var(--bg-card-secondary);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab-button {
+            background: var(--bg-card);
+            color: #2563eb;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab-button:hover {
+            background: var(--bg-card-secondary);
+        }
+        
+        .tab-button.active {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .content {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px var(--shadow);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .section-header h2 {
+            color: var(--text-primary);
+            font-size: 24px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn-green {
+            background: #16a34a;
+        }
+        
+        .btn-green:hover {
+            background: #15803d;
+        }
+        
+        .btn-red {
+            background: #dc2626;
+        }
+        
+        .btn-red:hover {
+            background: #b91c1c;
+        }
+
+        .btn-orange {
+            background: #ea580c;
+        }
+
+        .btn-orange:hover {
+            background: #c2410c;
+        }
+        
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 12px center;
+        }
+        
+        input[type="text"], input[type="number"], input[type="date"], textarea, select {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        textarea {
+            min-height: 60px;
+            resize: vertical;
+            font-family: Arial, sans-serif;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 15px;
+        }
+        
+        .box-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            background: var(--bg-card-secondary);
+            position: relative;
+        }
+
+        .box-card.in-trailer {
+            border: 2px solid #16a34a;
+            background: #f0fdf4;
+        }
+
+        [data-theme="dark"] .box-card.in-trailer {
+            background: #14532d;
+        }
+
+        .box-card.in-trailer::before {
+            content: "✓ IN TRAILER";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #16a34a;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .box-color-indicator {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .color-picker {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border: 3px solid #2563eb;
+            box-shadow: 0 0 0 2px var(--bg-card);
+        }
+        
+        .box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .box-header h3 {
+            color: var(--text-primary);
+            font-size: 18px;
+        }
+
+        .box-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+        
+        .box-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            color: var(--text-secondary);
+            transition: color 0.3s;
+        }
+        
+        .icon-btn:hover {
+            color: var(--text-primary);
+        }
+        
+        .icon-btn.green {
+            color: #16a34a;
+        }
+        
+        .icon-btn.blue {
+            color: #2563eb;
+        }
+        
+        .icon-btn.red {
+            color: #dc2626;
+        }
+        
+        .item-list {
+            list-style: none;
+            margin-bottom: 15px;
+        }
+        
+        .item-list li {
+            background: var(--bg-input);
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .item-quantity {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        [data-theme="dark"] .item-quantity {
+            background: #1e3a8a;
+            color: #93c5fd;
+        }
+        
+        .item-count {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+        }
+
+        .notes-section {
+            margin-top: 15px;
+            padding: 10px;
+            background: var(--bg-input);
+            border-radius: 6px;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .notes-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .notes-text {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+        
+        .profile-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            background: var(--bg-card-secondary);
+            margin-bottom: 15px;
+        }
+        
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-input);
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .checkbox-label:hover {
+            background: var(--bg-card-secondary);
+        }
+
+        .checkbox-label.in-trailer {
+            background: #f0fdf4;
+            border: 1px solid #16a34a;
+        }
+
+        [data-theme="dark"] .checkbox-label.in-trailer {
+            background: #14532d;
+        }
+        
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .info-box {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        [data-theme="dark"] .info-box {
+            background: #1e3a8a;
+            border-color: #1e40af;
+        }
+        
+        .info-box p {
+            color: #1e40af;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        [data-theme="dark"] .info-box p {
+            color: #93c5fd;
+        }
+
+        .trailer-status {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        [data-theme="dark"] .trailer-status {
+            background: #14532d;
+            border-color: #166534;
+        }
+
+        .trailer-status h3 {
+            color: #15803d;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        [data-theme="dark"] .trailer-status h3 {
+            color: #86efac;
+        }
+
+        .trailer-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: var(--bg-card);
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid #86efac;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #15803d;
+        }
+
+        [data-theme="dark"] .stat-value {
+            color: #86efac;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: var(--text-primary);
+            font-size: 20px;
+        }
+
+        .close-modal {
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border: none;
+            background: none;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .shopping-list {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        [data-theme="dark"] .shopping-list {
+            background: #78350f;
+            border-color: #b45309;
+        }
+
+        .shopping-list h3 {
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+
+        [data-theme="dark"] .shopping-list h3 {
+            color: #fbbf24;
+        }
+
+        .shopping-item {
+            background: var(--bg-card);
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        [data-theme="dark"] .badge-warning {
+            background: #78350f;
+            color: #fbbf24;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Scout Troop Packing Manager</h1>
+                <p>Scout inventory system</p>
+            </div>
+            <div class="header-right">
+                <span class="save-indicator">✓ Auto-Saved</span>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">🌓</button>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('boxes')">📦 Box Inventory</button>
+            <button class="tab-button" onclick="showTab('trailer')">🚚 Trailer Management</button>
+            <button class="tab-button" onclick="showTab('profiles')">📍 Campout Profiles</button>
+            <button class="tab-button" onclick="showTab('shopping')">🛒 Shopping List</button>
+            <button class="tab-button" onclick="showTab('settings')">⚙️ Settings</button>
+        </div>
+        
+        <div id="boxes-tab" class="content">
+            <div class="section-header">
+                <h2>Box Inventory</h2>
+                <div class="button-group">
+                    <button class="btn btn-green" onclick="printAllBoxes()">🖨️ Print All</button>
+                </div>
+            </div>
+
+            <input type="text" class="search-box" id="search-boxes" placeholder="Search boxes and items..." oninput="filterBoxes()">
+            
+            <div class="input-group">
+                <input type="text" id="new-box-name" placeholder="New box name (e.g., Box 3 - Dining)" onkeypress="if(event.key==='Enter') addBox()">
+                <button class="btn" onclick="addBox()">➕ Add Box</button>
+            </div>
+            
+            <div class="grid" id="boxes-container"></div>
+        </div>
+
+        <div id="trailer-tab" class="content hidden">
+            <div class="section-header">
+                <h2>Trailer Management</h2>
+                <div class="button-group">
+                    <button class="btn btn-green" onclick="printTrailerManifest()">🖨️ Print Load</button>
+                    <button class="btn btn-red" onclick="clearTrailer()">Clear All</button>
+                </div>
+            </div>
+
+            <div class="trailer-status">
+                <h3>Current Trailer Status</h3>
+                <div class="trailer-stats">
+                    <div class="stat">
+                        <div class="stat-label">Boxes Loaded</div>
+                        <div class="stat-value" id="loaded-count">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Total Available</div>
+                        <div class="stat-value" id="total-count">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Total Items</div>
+                        <div class="stat-value" id="items-count">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Total Weight</div>
+                        <div class="stat-value" id="total-weight">0 lbs</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom: 15px;">Select Boxes to Load in Trailer</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Check the boxes that are currently loaded in the trailer.</p>
+            
+            <div class="checkbox-grid" id="trailer-boxes-container"></div>
+        </div>
+        
+        <div id="profiles-tab" class="content hidden">
+            <div class="section-header">
+                <h2>Campout Profiles</h2>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="new-profile-name" placeholder="New profile name (e.g., Summer Camp, Winter Campout)" onkeypress="if(event.key==='Enter') addProfile()">
+                <button class="btn" onclick="addProfile()">➕ Add Profile</button>
+            </div>
+            
+            <div id="profiles-container"></div>
+        </div>
+
+        <div id="shopping-tab" class="content hidden">
+            <div class="section-header">
+                <h2>Shopping List</h2>
+                <button class="btn btn-green" onclick="printShoppingList()">🖨️ Print List</button>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Items marked as "needs replacement" across all boxes</p>
+
+            <div id="shopping-container"></div>
+        </div>
+
+        <div id="settings-tab" class="content hidden">
+            <div class="section-header">
+                <h2>Settings & Backup</h2>
+            </div>
+
+            <div style="display: grid; gap: 20px;">
+                <div>
+                    <h3 style="margin-bottom: 10px; color: var(--text-primary);">Export Data</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Download all your data as a backup file</p>
+                    <button class="btn btn-green" onclick="exportData()">📥 Download Backup</button>
+                </div>
+
+                <div>
+                    <h3 style="margin-bottom: 10px; color: var(--text-primary);">Import Data</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Restore from a backup file</p>
+                    <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+                    <button class="btn btn-orange" onclick="document.getElementById('import-file').click()">📤 Upload Backup</button>
+                </div>
+
+                <div>
+                    <h3 style="margin-bottom: 10px; color: var(--text-primary);">Reset Data</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Clear all data and start fresh</p>
+                    <button class="btn btn-red" onclick="resetData()">🗑️ Reset Everything</button>
+                </div>
+
+                <div class="info-box">
+                    <p><strong>Data Storage:</strong> All data is stored locally in your browser. Regular backups are recommended!</p>
+                    <p style="margin-top: 10px;"><strong>Tip:</strong> Export your data before clearing browser cache or switching devices.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Box Modal -->
+    <div id="edit-box-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Box Details</h3>
+                <button class="close-modal" onclick="closeEditModal()">×</button>
+            </div>
+            <div id="edit-box-form"></div>
+        </div>
+    </div>
+
+    <!-- Add Item Modal -->
+    <div id="add-item-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Item</h3>
+                <button class="close-modal" onclick="closeAddItemModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Item Name</label>
+                <input type="text" id="modal-item-name" placeholder="e.g., Flashlight">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input type="number" id="modal-item-quantity" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" id="modal-item-needs-replacement"> Needs Replacement
+                </label>
+            </div>
+            <button class="btn" onclick="saveNewItem()">Add Item</button>
+        </div>
+    </div>
+
+    <script>
+        const BOX_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#64748b'];
+        
+        let boxes = JSON.parse(localStorage.getItem('scoutBoxes')) || [
+            {
+                id: 1,
+                name: 'Box 1 - Cooking',
+                items: [
+                    {name: 'Camp stove (2-burner)', quantity: 2, needsReplacement: false},
+                    {name: 'Propane tanks (1 lb)', quantity: 8, needsReplacement: false},
+                    {name: 'Large pot (10 qt)', quantity: 2, needsReplacement: false},
+                    {name: 'Frying pans', quantity: 3, needsReplacement: false},
+                    {name: 'Cooking utensils set', quantity: 2, needsReplacement: false},
+                    {name: 'Cutting boards', quantity: 3, needsReplacement: false},
+                    {name: 'Can opener', quantity: 2, needsReplacement: true},
+                    {name: 'Dutch oven (12 inch)', quantity: 2, needsReplacement: false},
+                    {name: 'Charcoal chimney', quantity: 1, needsReplacement: false},
+                    {name: 'Propane adapter hose', quantity: 1, needsReplacement: false}
+                ],
+                inTrailer: true,
+                color: '#ef4444',
+                weight: 35,
+                notes: 'Check propane levels before each trip. Stove #2 needs new igniter.',
+                lastInspection: '2025-10-01'
+            },
+            {
+                id: 2,
+                name: 'Box 2 - First Aid',
+                items: [
+                    {name: 'Large first aid kit', quantity: 1, needsReplacement: false},
+                    {name: 'Instant ice packs', quantity: 6, needsReplacement: false},
+                    {name: 'Bandages (assorted)', quantity: 100, needsReplacement: false},
+                    {name: 'Medical tape', quantity: 4, needsReplacement: false},
+                    {name: 'Antiseptic wipes', quantity: 50, needsReplacement: false},
+                    {name: 'Medical gloves (pairs)', quantity: 30, needsReplacement: false},
+                    {name: 'Ibuprofen bottles', quantity: 2, needsReplacement: true},
+                    {name: 'Antibiotic ointment tubes', quantity: 3, needsReplacement: false},
+                    {name: 'Emergency contact cards', quantity: 10, needsReplacement: false},
+                    {name: 'CPR mask', quantity: 1, needsReplacement: false},
+                    {name: 'Ace bandages', quantity: 4, needsReplacement: false},
+                    {name: 'Tweezers', quantity: 2, needsReplacement: false}
+                ],
+                inTrailer: true,
+                color: '#f97316',
+                weight: 18,
+                notes: 'Inspect monthly for expired supplies. Check ibuprofen expiration dates.',
+                lastInspection: '2025-09-15'
+            },
+            {
+                id: 3,
+                name: 'Box 3 - Dining/Eating',
+                items: [
+                    {name: 'Plates (heavy duty paper)', quantity: 100, needsReplacement: false},
+                    {name: 'Bowls (heavy duty paper)', quantity: 100, needsReplacement: false},
+                    {name: 'Forks', quantity: 50, needsReplacement: false},
+                    {name: 'Spoons', quantity: 50, needsReplacement: false},
+                    {name: 'Knives (plastic)', quantity: 50, needsReplacement: false},
+                    {name: 'Cups (disposable)', quantity: 100, needsReplacement: false},
+                    {name: 'Paper towel rolls', quantity: 12, needsReplacement: false},
+                    {name: 'Napkins (packs)', quantity: 8, needsReplacement: false},
+                    {name: 'Trash bags (55 gal)', quantity: 30, needsReplacement: false},
+                    {name: 'Dish soap bottles', quantity: 3, needsReplacement: false},
+                    {name: 'Sponges', quantity: 8, needsReplacement: false},
+                    {name: 'Dish tubs', quantity: 3, needsReplacement: false}
+                ],
+                inTrailer: true,
+                color: '#84cc16',
+                weight: 22,
+                notes: 'Restock paper goods after each campout',
+                lastInspection: '2025-09-28'
+            },
+            {
+                id: 4,
+                name: 'Box 4 - Shelter/Tents',
+                items: [
+                    {name: '6-person tents', quantity: 4, needsReplacement: false},
+                    {name: 'Tent stakes (per tent)', quantity: 40, needsReplacement: false},
+                    {name: 'Tent repair kit', quantity: 1, needsReplacement: false},
+                    {name: 'Ground tarps', quantity: 5, needsReplacement: false},
+                    {name: 'Rain flies', quantity: 4, needsReplacement: false},
+                    {name: 'Tent mallets', quantity: 3, needsReplacement: false},
+                    {name: 'Bungee cords (assorted)', quantity: 20, needsReplacement: false}
+                ],
+                inTrailer: true,
+                color: '#0ea5e9',
+                weight: 45,
+                notes: 'Check all tents for damage after each use. Tent #3 has small tear in mesh.',
+                lastInspection: '2025-09-20'
+            },
+            {
+                id: 5,
+                name: 'Box 5 - Tools/Repair',
+                items: [
+                    {name: 'Hammer', quantity: 2, needsReplacement: false},
+                    {name: 'Hatchet', quantity: 2, needsReplacement: false},
+                    {name: 'Folding saws', quantity: 3, needsReplacement: false},
+                    {name: 'Multi-tool', quantity: 4, needsReplacement: false},
+                    {name: 'Duct tape rolls', quantity: 4, needsReplacement: false},
+                    {name: 'Paracord (100 ft)', quantity: 3, needsReplacement: false},
+                    {name: 'Carabiners', quantity: 15, needsReplacement: false},
+                    {name: 'Work gloves (pairs)', quantity: 10, needsReplacement: false},
+                    {name: 'Zip ties (assorted)', quantity: 100, needsReplacement: false},
+                    {name: 'Screwdriver set', quantity: 1, needsReplacement: false},
+                    {name: 'Pliers', quantity: 2, needsReplacement: false}
+                ],
+                inTrailer: true,
+                color: '#64748b',
+                weight: 28,
+                notes: 'Sharpen saws before summer camp. One hatchet needs new handle.',
+                lastInspection: '2025-08-30'
+            },
+            {
+                id: 6,
+                name: 'Box 6 - Lighting',
+                items: [
+                    {name: 'LED lanterns', quantity: 8, needsReplacement: false},
+                    {name: 'Flashlights', quantity: 12, needsReplacement: false},
+                    {name: 'Headlamps', quantity: 6, needsReplacement: false},
+                    {name: 'AA batteries (pack)', quantity: 8, needsReplacement: false},
+                    {name: 'D batteries (pack)', quantity: 6, needsReplacement: false},
+                    {name: 'Battery tester', quantity: 1, needsReplacement: false},
+                    {name: 'Glow sticks', quantity: 50, needsReplacement: false},
+                    {name: 'Solar lanterns', quantity: 4, needsReplacement: false}
+                ],
+                inTrailer: false,
+                color: '#eab308',
+                weight: 15,
+                notes: 'Test all lanterns and flashlights before trips. Replace old batteries.',
+                lastInspection: '2025-09-10'
+            },
+            {
+                id: 7,
+                name: 'Box 7 - Games/Activities',
+                items: [
+                    {name: 'Frisbees', quantity: 6, needsReplacement: false},
+                    {name: 'Footballs', quantity: 3, needsReplacement: false},
+                    {name: 'Soccer balls', quantity: 2, needsReplacement: false},
+                    {name: 'Playing cards (decks)', quantity: 8, needsReplacement: false},
+                    {name: 'Horseshoe sets', quantity: 2, needsReplacement: false},
+                    {name: 'Bocce ball set', quantity: 1, needsReplacement: false},
+                    {name: 'Volleyball and net', quantity: 1, needsReplacement: false},
+                    {name: 'Air pump', quantity: 1, needsReplacement: true}
+                ],
+                inTrailer: false,
+                color: '#a855f7',
+                weight: 20,
+                notes: 'Check balls for proper inflation. Air pump needs repair.',
+                lastInspection: '2025-07-15'
+            },
+            {
+                id: 8,
+                name: 'Box 8 - Water/Coolers',
+                items: [
+                    {name: '5-gallon water jugs', quantity: 6, needsReplacement: false},
+                    {name: 'Large coolers (48 qt)', quantity: 4, needsReplacement: false},
+                    {name: 'Small coolers (28 qt)', quantity: 3, needsReplacement: false},
+                    {name: 'Water spigots', quantity: 3, needsReplacement: false},
+                    {name: 'Ice packs (reusable)', quantity: 12, needsReplacement: false},
+                    {name: 'Cooler drain plugs', quantity: 7, needsReplacement: true}
+                ],
+                inTrailer: false,
+                color: '#06b6d4',
+                weight: 35,
+                notes: 'Clean and sanitize all water jugs before each use',
+                lastInspection: '2025-09-25'
+            }
+        ];
+
+        let profiles = JSON.parse(localStorage.getItem('scoutProfiles')) || [
+            {
+                id: 1,
+                name: 'Weekend Campout',
+                requiredBoxes: [1, 2, 3, 4, 5, 6]
+            },
+            {
+                id: 2,
+                name: 'Summer Camp (Week)',
+                requiredBoxes: [1, 2, 3, 4, 5, 6, 7, 8]
+            },
+            {
+                id: 3,
+                name: 'Day Hike',
+                requiredBoxes: [2, 5, 6]
+            },
+            {
+                id: 4,
+                name: 'Winter Campout',
+                requiredBoxes: [1, 2, 3, 4, 5, 6, 8]
+            }
+        ];
+
+        let editingBoxId = null;
+        let currentTab = 'boxes';
+        let currentEditBoxId = null;
+        let currentAddItemBoxId = null;
+
+        // Load theme
+        const savedTheme = localStorage.getItem('scoutTheme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('scoutTheme', newTheme);
+        }
+
+        function saveData() {
+            localStorage.setItem('scoutBoxes', JSON.stringify(boxes));
+            localStorage.setItem('scoutProfiles', JSON.stringify(profiles));
+        }
+
+        function showTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tab + '-tab').classList.remove('hidden');
+            event.target.classList.add('active');
+            
+            render();
+        }
+
+        function addBox() {
+            const input = document.getElementById('new-box-name');
+            const name = input.value.trim();
+            if (name) {
+                boxes.push({
+                    id: Date.now(),
+                    name: name,
+                    items: [],
+                    inTrailer: false,
+                    color: BOX_COLORS[Math.floor(Math.random() * BOX_COLORS.length)],
+                    weight: 0,
+                    notes: '',
+                    lastInspection: new Date().toISOString().split('T')[0]
+                });
+                input.value = '';
+                saveData();
+                render();
+            }
+        }
+
+        function deleteBox(id) {
+            if (confirm('Delete this box?')) {
+                boxes = boxes.filter(b => b.id !== id);
+                saveData();
+                render();
+            }
+        }
+
+        function openEditModal(boxId) {
+            currentEditBoxId = boxId;
+            const box = boxes.find(b => b.id === boxId);
+            if (!box) return;
+
+            const form = document.getElementById('edit-box-form');
+            form.innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">Box Name</label>
+                    <input type="text" id="edit-box-name" value="${box.name}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Weight (lbs)</label>
+                    <input type="number" id="edit-box-weight" value="${box.weight || 0}" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Inspection</label>
+                    <input type="date" id="edit-box-inspection" value="${box.lastInspection || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Box Color</label>
+                    <div class="color-picker">
+                        ${BOX_COLORS.map(color => `
+                            <div class="color-option ${box.color === color ? 'selected' : ''}" 
+                                 style="background: ${color}" 
+                                 onclick="selectColor('${color}')"></div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea id="edit-box-notes" rows="3">${box.notes || ''}</textarea>
+                </div>
+                <button class="btn" onclick="saveBoxEdit()">Save Changes</button>
+            `;
+
+            document.getElementById('edit-box-modal').classList.add('active');
+        }
+
+        function selectColor(color) {
+            document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-box-modal').classList.remove('active');
+            currentEditBoxId = null;
+        }
+
+        function saveBoxEdit() {
+            const box = boxes.find(b => b.id === currentEditBoxId);
+            if (box) {
+                box.name = document.getElementById('edit-box-name').value;
+                box.weight = parseFloat(document.getElementById('edit-box-weight').value) || 0;
+                box.lastInspection = document.getElementById('edit-box-inspection').value;
+                box.notes = document.getElementById('edit-box-notes').value;
+                
+                const selectedColor = document.querySelector('.color-option.selected');
+                if (selectedColor) {
+                    box.color = selectedColor.style.background;
+                }
+                
+                saveData();
+                closeEditModal();
+                render();
+            }
+        }
+
+        function openAddItemModal(boxId) {
+            currentAddItemBoxId = boxId;
+            document.getElementById('modal-item-name').value = '';
+            document.getElementById('modal-item-quantity').value = 1;
+            document.getElementById('modal-item-needs-replacement').checked = false;
+            document.getElementById('add-item-modal').classList.add('active');
+        }
+
+        function closeAddItemModal() {
+            document.getElementById('add-item-modal').classList.remove('active');
+            currentAddItemBoxId = null;
+        }
+
+        function saveNewItem() {
+            const box = boxes.find(b => b.id === currentAddItemBoxId);
+            if (box) {
+                const name = document.getElementById('modal-item-name').value.trim();
+                const quantity = parseInt(document.getElementById('modal-item-quantity').value) || 1;
+                const needsReplacement = document.getElementById('modal-item-needs-replacement').checked;
+                
+                if (name) {
+                    box.items.push({ name, quantity, needsReplacement });
+                    saveData();
+                    closeAddItemModal();
+                    render();
+                }
+            }
+        }
+
+        function deleteItem(boxId, itemIndex) {
+            const box = boxes.find(b => b.id === boxId);
+            if (box && confirm('Delete this item?')) {
+                box.items.splice(itemIndex, 1);
+                saveData();
+                render();
+            }
+        }
+
+        function toggleItemReplacement(boxId, itemIndex) {
+            const box = boxes.find(b => b.id === boxId);
+            if (box && box.items[itemIndex]) {
+                box.items[itemIndex].needsReplacement = !box.items[itemIndex].needsReplacement;
+                saveData();
+                render();
+            }
+        }
+
+        function toggleBoxInTrailer(boxId) {
+            const box = boxes.find(b => b.id === boxId);
+            if (box) {
+                box.inTrailer = !box.inTrailer;
+                saveData();
+                render();
+            }
+        }
+
+        function clearTrailer() {
+            if (confirm('Remove all boxes from trailer?')) {
+                boxes.forEach(box => box.inTrailer = false);
+                saveData();
+                render();
+            }
+        }
+
+        function addProfile() {
+            const input = document.getElementById('new-profile-name');
+            const name = input.value.trim();
+            if (name) {
+                profiles.push({
+                    id: Date.now(),
+                    name: name,
+                    requiredBoxes: []
+                });
+                input.value = '';
+                saveData();
+                render();
+            }
+        }
+
+        function deleteProfile(id) {
+            if (confirm('Delete this profile?')) {
+                profiles = profiles.filter(p => p.id !== id);
+                saveData();
+                render();
+            }
+        }
+
+        function toggleBoxInProfile(profileId, boxId) {
+            const profile = profiles.find(p => p.id === profileId);
+            if (profile) {
+                const index = profile.requiredBoxes.indexOf(boxId);
+                if (index > -1) {
+                    profile.requiredBoxes.splice(index, 1);
+                } else {
+                    profile.requiredBoxes.push(boxId);
+                }
+                saveData();
+                render();
+            }
+        }
+
+        function filterBoxes() {
+            const search = document.getElementById('search-boxes').value.toLowerCase();
+            const filtered = boxes.filter(box => {
+                const nameMatch = box.name.toLowerCase().includes(search);
+                const itemMatch = box.items.some(item => item.name.toLowerCase().includes(search));
+                return nameMatch || itemMatch;
+            });
+            
+            const container = document.getElementById('boxes-container');
+            if (search) {
+                renderBoxesFiltered(filtered);
+            } else {
+                renderBoxes();
+            }
+        }
+
+        function exportData() {
+            const data = {
+                boxes: boxes,
+                profiles: profiles,
+                exportDate: new Date().toISOString(),
+                version: '2.0'
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `scout-packing-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (confirm('This will replace all current data. Continue?')) {
+                        boxes = data.boxes || [];
+                        profiles = data.profiles || [];
+                        saveData();
+                        render();
+                        alert('Data imported successfully!');
+                    }
+                } catch (error) {
+                    alert('Error importing file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetData() {
+            if (confirm('This will delete ALL data. Are you sure?')) {
+                if (confirm('Really delete everything? This cannot be undone!')) {
+                    localStorage.removeItem('scoutBoxes');
+                    localStorage.removeItem('scoutProfiles');
+                    location.reload();
+                }
+            }
+        }
+
+        function printBox(box) {
+            const trailerStatus = box.inTrailer ? '✓ Currently in Trailer' : '✗ Not in Trailer';
+            const content = `
+                <h1>Box Inventory: ${box.name}</h1>
+                <p><strong>Status:</strong> ${trailerStatus}</p>
+                <p><strong>Weight:</strong> ${box.weight} lbs</p>
+                <p><strong>Last Inspection:</strong> ${box.lastInspection || 'Not recorded'}</p>
+                <p><strong>Total Items:</strong> ${box.items.length}</p>
+                ${box.notes ? `<p><strong>Notes:</strong> ${box.notes}</p>` : ''}
+                <h2>Items</h2>
+                <ul>
+                    ${box.items.map(item => `<li>☐ ${item.name} (Qty: ${item.quantity})${item.needsReplacement ? ' <strong>[NEEDS REPLACEMENT]</strong>' : ''}</li>`).join('')}
+                </ul>
+                <p style="margin-top: 30px;"><em>Printed: ${new Date().toLocaleDateString()}</em></p>
+            `;
+            printContent(content, box.name);
+        }
+
+        function printAllBoxes() {
+            const content = `
+                <h1>Complete Box Inventory</h1>
+                <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Total Boxes:</strong> ${boxes.length}</p>
+                ${boxes.map(box => `
+                    <div style="margin-bottom: 30px; page-break-inside: avoid;">
+                        <h2>${box.name} ${box.inTrailer ? '✓ In Trailer' : ''}</h2>
+                        <p><strong>Weight:</strong> ${box.weight} lbs | <strong>Last Inspection:</strong> ${box.lastInspection || 'N/A'}</p>
+                        ${box.notes ? `<p style="font-style: italic;">${box.notes}</p>` : ''}
+                        <ul>
+                            ${box.items.map(item => `<li>☐ ${item.name} (${item.quantity})${item.needsReplacement ? ' [REPLACE]' : ''}</li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('')}
+            `;
+            printContent(content, 'All Box Inventories');
+        }
+
+        function printTrailerManifest() {
+            const loadedBoxes = boxes.filter(b => b.inTrailer);
+            const totalItems = loadedBoxes.reduce((sum, box) => sum + box.items.reduce((s, i) => s + i.quantity, 0), 0);
+            const totalWeight = loadedBoxes.reduce((sum, box) => sum + (box.weight || 0), 0);
+            
+            const content = `
+                <h1>Trailer Load Manifest</h1>
+                <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Boxes Loaded:</strong> ${loadedBoxes.length}</p>
+                <p><strong>Total Items:</strong> ${totalItems}</p>
+                <p><strong>Total Weight:</strong> ${totalWeight} lbs</p>
+                <h2>Currently Loaded Boxes</h2>
+                ${loadedBoxes.length > 0 ? `
+                    <ul>
+                        ${loadedBoxes.map(box => `
+                            <li>
+                                ☐ ${box.name} (${box.items.length} items, ${box.weight} lbs)
+                                <ul style="margin-left: 20px;">
+                                    ${box.items.map(item => `<li>• ${item.name} (${item.quantity})</li>`).join('')}
+                                </ul>
+                            </li>
+                        `).join('')}
+                    </ul>
+                ` : '<p>No boxes currently loaded in trailer.</p>'}
+            `;
+            printContent(content, 'Trailer Manifest');
+        }
+
+        function printCampoutChecklist(profile) {
+            const requiredBoxes = boxes.filter(b => profile.requiredBoxes.includes(b.id));
+            const availableBoxes = requiredBoxes.filter(b => b.inTrailer);
+            const missingBoxes = requiredBoxes.filter(b => !b.inTrailer);
+            
+            const content = `
+                <h1>Campout Checklist: ${profile.name}</h1>
+                <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Required Boxes:</strong> ${requiredBoxes.length}</p>
+                <p><strong>Available in Trailer:</strong> ${availableBoxes.length}</p>
+                ${missingBoxes.length > 0 ? `<p><strong>Need to Load:</strong> ${missingBoxes.length}</p>` : ''}
+                
+                ${availableBoxes.length > 0 ? `
+                    <h2>✓ Available Boxes</h2>
+                    <ul>
+                        ${availableBoxes.map(box => `
+                            <li>
+                                ☑ ${box.name}
+                                <ul style="margin-left: 20px;">
+                                    ${box.items.map(item => `<li>• ${item.name} (${item.quantity})</li>`).join('')}
+                                </ul>
+                            </li>
+                        `).join('')}
+                    </ul>
+                ` : ''}
+                
+                ${missingBoxes.length > 0 ? `
+                    <h2>✗ Need to Load</h2>
+                    <ul>
+                        ${missingBoxes.map(box => `
+                            <li>
+                                ☐ ${box.name}
+                                <ul style="margin-left: 20px;">
+                                    ${box.items.map(item => `<li>• ${item.name} (${item.quantity})</li>`).join('')}
+                                </ul>
+                            </li>
+                        `).join('')}
+                    </ul>
+                ` : ''}
+            `;
+            printContent(content, profile.name);
+        }
+
+        function printShoppingList() {
+            const needsReplacement = [];
+            boxes.forEach(box => {
+                box.items.forEach(item => {
+                    if (item.needsReplacement) {
+                        needsReplacement.push({ item: item.name, box: box.name, quantity: item.quantity });
+                    }
+                });
+            });
+
+            const content = `
+                <h1>Shopping List</h1>
+                <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Items to Replace:</strong> ${needsReplacement.length}</p>
+                <h2>Items Needed</h2>
+                ${needsReplacement.length > 0 ? `
+                    <ul>
+                        ${needsReplacement.map(item => `
+                            <li>☐ ${item.item} (Qty: ${item.quantity}) - from ${item.box}</li>
+                        `).join('')}
+                    </ul>
+                ` : '<p>No items need replacement!</p>'}
+            `;
+            printContent(content, 'Shopping List');
+        }
+
+        function printContent(content, title) {
+            const printWindow = window.open('', '', 'width=800,height=600');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>${title}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 20px; }
+                            h1 { color: #1e40af; border-bottom: 2px solid #1e40af; padding-bottom: 10px; }
+                            h2 { color: #3b82f6; margin-top: 20px; }
+                            ul { list-style-type: none; padding-left: 0; }
+                            li { padding: 5px 0; border-bottom: 1px solid #e5e7eb; }
+                        </style>
+                    </head>
+                    <body>${content}</body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function render() {
+            if (currentTab === 'boxes') {
+                renderBoxes();
+            } else if (currentTab === 'profiles') {
+                renderProfiles();
+            } else if (currentTab === 'trailer') {
+                renderTrailer();
+            } else if (currentTab === 'shopping') {
+                renderShopping();
+            }
+        }
+
+        function renderBoxes() {
+            const container = document.getElementById('boxes-container');
+            container.innerHTML = boxes.map(box => {
+                const totalItems = box.items.reduce((sum, item) => sum + item.quantity, 0);
+                const boxJson = JSON.stringify(box).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                return `
+                <div class="box-card ${box.inTrailer ? 'in-trailer' : ''}" style="border-left: 4px solid ${box.color}">
+                    <div class="box-header">
+                        <div>
+                            <h3>${box.name}</h3>
+                            <div class="box-meta">
+                                Weight: ${box.weight} lbs | Last Inspection: ${box.lastInspection || 'N/A'}
+                            </div>
+                        </div>
+                        <div class="box-actions">
+                            <button class="icon-btn green" onclick="printBoxById(${box.id})" title="Print">🖨️</button>
+                            <button class="icon-btn blue" onclick="openEditModal(${box.id})" title="Edit">✏️</button>
+                            <button class="icon-btn red" onclick="deleteBox(${box.id})" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+                    <ul class="item-list">
+                        ${box.items.map((item, idx) => `
+                            <li>
+                                <span>
+                                    ${item.name}
+                                    ${item.quantity > 1 ? `<span class="item-quantity">×${item.quantity}</span>` : ''}
+                                    ${item.needsReplacement ? ' <span class="badge badge-warning">REPLACE</span>' : ''}
+                                </span>
+                                <div>
+                                    <button class="icon-btn" onclick="toggleItemReplacement(${box.id}, ${idx})" title="Toggle replacement">
+                                        ${item.needsReplacement ? '✓' : '🛒'}
+                                    </button>
+                                    <button class="icon-btn red" onclick="deleteItem(${box.id}, ${idx})" title="Delete">🗑️</button>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <button class="btn btn-small" onclick="openAddItemModal(${box.id})">➕ Add Item</button>
+                    ${box.notes ? `
+                        <div class="notes-section">
+                            <div class="notes-label">Notes:</div>
+                            <div class="notes-text">${box.notes}</div>
+                        </div>
+                    ` : ''}
+                    <div class="item-count">${totalItems} items total ${box.inTrailer ? '• In Trailer ✓' : '• Not in Trailer'}</div>
+                </div>
+            `}).join('');
+        }
+
+        function printBoxById(boxId) {
+            const box = boxes.find(b => b.id === boxId);
+            if (box) printBox(box);
+        }
+
+        function renderBoxesFiltered(filtered) {
+            const container = document.getElementById('boxes-container');
+            container.innerHTML = filtered.map(box => {
+                const totalItems = box.items.reduce((sum, item) => sum + item.quantity, 0);
+                return `
+                <div class="box-card ${box.inTrailer ? 'in-trailer' : ''}" style="border-left: 4px solid ${box.color}">
+                    <div class="box-header">
+                        <div>
+                            <h3>${box.name}</h3>
+                            <div class="box-meta">
+                                Weight: ${box.weight} lbs | Last Inspection: ${box.lastInspection || 'N/A'}
+                            </div>
+                        </div>
+                        <div class="box-actions">
+                            <button class="icon-btn green" onclick="printBoxById(${box.id})" title="Print">🖨️</button>
+                            <button class="icon-btn blue" onclick="openEditModal(${box.id})" title="Edit">✏️</button>
+                            <button class="icon-btn red" onclick="deleteBox(${box.id})" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+                    <ul class="item-list">
+                        ${box.items.map((item, idx) => `
+                            <li>
+                                <span>
+                                    ${item.name}
+                                    ${item.quantity > 1 ? `<span class="item-quantity">×${item.quantity}</span>` : ''}
+                                    ${item.needsReplacement ? ' <span class="badge badge-warning">REPLACE</span>' : ''}
+                                </span>
+                                <div>
+                                    <button class="icon-btn" onclick="toggleItemReplacement(${box.id}, ${idx})" title="Toggle replacement">
+                                        ${item.needsReplacement ? '✓' : '🛒'}
+                                    </button>
+                                    <button class="icon-btn red" onclick="deleteItem(${box.id}, ${idx})" title="Delete">🗑️</button>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <button class="btn btn-small" onclick="openAddItemModal(${box.id})">➕ Add Item</button>
+                    ${box.notes ? `
+                        <div class="notes-section">
+                            <div class="notes-label">Notes:</div>
+                            <div class="notes-text">${box.notes}</div>
+                        </div>
+                    ` : ''}
+                    <div class="item-count">${totalItems} items total ${box.inTrailer ? '• In Trailer ✓' : '• Not in Trailer'}</div>
+                </div>
+            `}).join('');
+        }
+
+        function renderTrailer() {
+            const loadedBoxes = boxes.filter(b => b.inTrailer);
+            const totalItems = loadedBoxes.reduce((sum, box) => sum + box.items.reduce((s, i) => s + i.quantity, 0), 0);
+            const totalWeight = loadedBoxes.reduce((sum, box) => sum + (box.weight || 0), 0);
+            
+            document.getElementById('loaded-count').textContent = loadedBoxes.length;
+            document.getElementById('total-count').textContent = boxes.length;
+            document.getElementById('items-count').textContent = totalItems;
+            document.getElementById('total-weight').textContent = totalWeight + ' lbs';
+
+            const container = document.getElementById('trailer-boxes-container');
+            container.innerHTML = boxes.map(box => {
+                const totalItems = box.items.reduce((sum, item) => sum + item.quantity, 0);
+                return `
+                <label class="checkbox-label ${box.inTrailer ? 'in-trailer' : ''}" style="border-left: 3px solid ${box.color}">
+                    <input type="checkbox" ${box.inTrailer ? 'checked' : ''} onchange="toggleBoxInTrailer(${box.id})">
+                    <span><strong>${box.name}</strong> (${totalItems} items, ${box.weight} lbs)</span>
+                </label>
+            `}).join('');
+        }
+
+        function renderProfiles() {
+            const container = document.getElementById('profiles-container');
+            container.innerHTML = profiles.map(profile => {
+                const requiredBoxes = boxes.filter(b => profile.requiredBoxes.includes(b.id));
+                const availableBoxes = requiredBoxes.filter(b => b.inTrailer);
+                const profileJson = JSON.stringify(profile).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                
+                return `
+                    <div class="profile-card">
+                        <div class="box-header">
+                            <div>
+                                <h3>${profile.name}</h3>
+                                ${requiredBoxes.length > 0 ? `
+                                    <p style="color: var(--text-secondary); font-size: 14px; margin-top: 5px;">
+                                        ${availableBoxes.length}/${requiredBoxes.length} boxes in trailer
+                                        ${availableBoxes.length === requiredBoxes.length ? ' <span style="color: #16a34a;">✓ Ready</span>' : ''}
+                                    </p>
+                                ` : ''}
+                            </div>
+                            <div class="box-actions">
+                                <button class="icon-btn green" onclick="printCampoutChecklistById(${profile.id})" title="Print checklist">🖨️</button>
+                                <button class="icon-btn red" onclick="deleteProfile(${profile.id})" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 14px;">Select boxes needed for this campout:</p>
+                        <div class="checkbox-grid">
+                            ${boxes.map(box => `
+                                <label class="checkbox-label ${box.inTrailer ? 'in-trailer' : ''}" style="border-left: 3px solid ${box.color}">
+                                    <input type="checkbox" ${profile.requiredBoxes.includes(box.id) ? 'checked' : ''} onchange="toggleBoxInProfile(${profile.id}, ${box.id})">
+                                    <span>${box.name} ${box.inTrailer ? '✓' : ''}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                        <div class="item-count">${profile.requiredBoxes.length} box(es) selected</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function printCampoutChecklistById(profileId) {
+            const profile = profiles.find(p => p.id === profileId);
+            if (profile) printCampoutChecklist(profile);
+        }
+
+        function renderShopping() {
+            const needsReplacement = [];
+            boxes.forEach(box => {
+                box.items.forEach(item => {
+                    if (item.needsReplacement) {
+                        needsReplacement.push({ item: item.name, box: box.name, quantity: item.quantity });
+                    }
+                });
+            });
+
+            const container = document.getElementById('shopping-container');
+            
+            if (needsReplacement.length === 0) {
+                container.innerHTML = '<div class="info-box"><p>🎉 No items need replacement! Everything is in good condition.</p></div>';
+            } else {
+                container.innerHTML = `
+                    <div class="shopping-list">
+                        <h3>🛒 Items to Purchase (${needsReplacement.length})</h3>
+                        ${needsReplacement.map(item => `
+                            <div class="shopping-item">
+                                <span><strong>${item.item}</strong> (Qty: ${item.quantity}) - from ${item.box}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        // Initial render
+        render();
+    </script>
+</body>
+</html>

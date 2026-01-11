@@ -1,0 +1,39 @@
+# Node modules
+backend/node_modules/
+node_modules/
+
+# Environment files with secrets
+.env
+*.env.local
+backend/.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Database files (if using SQLite)
+*.db
+*.sqlite
+postgres_data/
+
+# Docker volumes
+volumes/
+
+# Python
+venv/
+__pycache__/
+
+# Backups
+*.sql
+backups/
+*.tar.gz
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
